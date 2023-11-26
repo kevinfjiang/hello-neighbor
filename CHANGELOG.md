@@ -1,4 +1,4 @@
-# Changelog for `hello-neighbors`
+# Changelog for `hello-neighbor`
 
 All notable changes to this project will be documented in this file.
 

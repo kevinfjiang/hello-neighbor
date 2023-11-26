@@ -4,11 +4,11 @@ cabal-version: 2.2
 --
 -- see: https://github.com/sol/hpack
 
-name:           hello-neighbors
+name:           hello-neighbor
 version:        0.1.0.0
-description:    Please see the README on GitHub at <https://github.com/githubuser/hello-neighbors#readme>
-homepage:       https://github.com/githubuser/hello-neighbors#readme
-bug-reports:    https://github.com/githubuser/hello-neighbors/issues
+description:    Please see the README on GitHub at <https://github.com/githubuser/hello-neighbor#readme>
+homepage:       https://github.com/githubuser/hello-neighbor#readme
+bug-reports:    https://github.com/githubuser/hello-neighbor/issues
 author:         Author name here
 maintainer:     example@example.com
 copyright:      2023 Author name here
@@ -21,7 +21,7 @@ extra-source-files:
 
 source-repository head
   type: git
-  location: https://github.com/githubuser/hello-neighbors
+  location: https://github.com/githubuser/hello-neighbor
 
 library
   exposed-modules:
@@ -37,7 +37,7 @@ library
       base >=4.7 && <5
   default-language: Haskell2010
 
-executable hello-neighbors-exe
+executable hello-neighbor-exe
   main-is: Main.hs
   other-modules:
       Paths_hello_neighbors
@@ -48,10 +48,10 @@ executable hello-neighbors-exe
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
-    , hello-neighbors
+    , hello-neighbor
   default-language: Haskell2010
 
-test-suite hello-neighbors-test
+test-suite hello-neighbor-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
@@ -63,5 +63,5 @@ test-suite hello-neighbors-test
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
-    , hello-neighbors
+    , hello-neighbor
   default-language: Haskell2010
