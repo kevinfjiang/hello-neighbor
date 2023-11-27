@@ -2,7 +2,7 @@
 
 
 ## Problem
-The Nearest Neighbors Search (NNS) algorithim is one of the most natural "ML" algorithims. The search will identify a training data point that is the closest to the desired point. Nearest Neighbor algorithims rely on the underlying assumption that the nearest datapoint within the training set is provides useful information. Nearest Neighbor search has been applied to problems such as data mining, reccomendation systems, pattern recognition, data compression, and databases [[1]](#1) [[2]](#2) [[6]](#6) [[7]](#7).
+The Nearest Neighbors Search (NNS) algorithim is one of the most natural "ML" algorithims. The search will identify a training data point that is the closest to the desired point. Nearest Neighbor algorithims rely on the underlying assumption that the nearest datapoint within the training set is provides useful information. Nearest Neighbor search has been applied to problems such as data mining, reccomendation systems, pattern recognition, data compression, and databases [[1]](#1) [[2]](#2) [[3](#3) [[6]](#6) [[7]](#7).
 
 More formally, we can define this problem for a metric space $(M, d)$, which consists of a set of points $y \in M$ and a distance metric $d: M\times M \rightarrow \mathbb{R}^+$. The distance metric must uphold the triangle inequality $d(x, z) \le d(x, y) + d(y, z)$, symmetry $d(x, y) = d(y, x)$, and satisfies $d(x,y) = 0 \Leftrightarrow x=y$. With this, the nearest neighbor is defined:
 $$
