@@ -5,44 +5,48 @@
 The Nearest Neighbors Search (NNS) algorithim is one of the most natural "ML" algorithims. The search will identify a training data point that is the closest to the desired point. Nearest Neighbor algorithims rely on the underlying assumption that the nearest datapoint within the training set is provides useful information. Nearest Neighbor search has been applied to problems such as data mining, reccomendation systems, pattern recognition, data compression, and databases [[1]](#1) [[2]](#2) [[3]](#3) [[6]](#6) [[7]](#7).
 
 More formally, we can define this problem for a metric space $(M, d)$, which consists of a set of points $y \in M$ and a distance metric $d: M\times M \rightarrow \mathbb{R}^+$. The distance metric must uphold the triangle inequality $d(x, z) \le d(x, y) + d(y, z)$, symmetry $d(x, y) = d(y, x)$, and satisfies $d(x,y) = 0 \Leftrightarrow x=y$. With this, the nearest neighbor is defined:
-$$
+```math
 NN(x) = \min_{y \in M} d(x, y)
-$$
+```
 
-A very complete example is given a set $S$ of $n$ vectors $S \in \mathbb{R}^d$, we want to find the nearest vector to $\vec{x}$ using the euclidean distance. A naive way to do this will take $O(nd)$ by computing the euclidean distance for every vector in $S$.
+A very concrete example is given a set $S$ of $n$ vectors $S \in \mathbb{R}^d$, we want to find the nearest vector to $\vec{x}$ using the euclidean distance. A naive way to do this will take $O(nd)$ by computing the euclidean distance for every vector in $S$.
 
 ## Problem Formulation
-This can pose a problem when considering a very expensive computationally expensive distance metric $d$ dominates other steps, such as the euclidean distance for a huge vector. Additionally, data structures such as $k\text{-}d$ trees break down if the "points" exist in an exotic space that cannot be easily turned into a vector. An example of this is text data and the edit distance.
+This can pose a problem when considering a very expensive computationally expensive distance metric $d$ dominates other steps, such as the euclidean distance for a huge vector. Additionally, data structures such as $k\text{-}d$ trees break down if the "points" exist in an exotic space that cannot be easily turned into a vector. An example of this is a set of vertices in a graph and the shortest-path.
 
 The linear approximating and eliminating search algorithm (LAESA) algorithim [[5]](#5) achieves $O(1)$ distance computations and $O(n + d\ \text{log}(n))$ time complexity ($d$  is the time to calculate the distance and doesn't grow with n). Another benefit is only requiring loading $O(1)$ data into memory outside of preprocessing, as we only need to load the data point for the distance computation. However, a drawback is the linear preprocessing cost $O(n)$ distance computations.
 
-The way we accomplish is by eliminitating candidates by finding a lower bound for their distance without explicitly computing the distance to a point $t$ using preprocessed distances[[4]](#4). Essentially we'll be using properties of the triangle inequality.  Given a target $t$, candidate $c$, and an active candidate $a$ whose distance to $t$ we know, the lower bound $d(t, c)$ is:
-$$
+The way we accomplish is by eliminitating candidates by finding a lower bound for their distance without explicitly computing the distance to a point $t$, instead using preprocessed distances[[4]](#4). We do this by using  properties of the triangle inequality.  Given a target $t$, candidate $c$, and an active candidate $a$ whose distance to $t$ we know, the lower bound $d(t, c)$ is:
+```math
 \begin{align}
 d(t, a) &\le d(t, c) + d(a, c) \\
 d(t, a) - d(a, c) &\le d(t, c)\\
 \end{align}
-$$
+```
 By symmetry:
-$$
+```math
 \begin{align}
-d(a, c) &\le  d(a, t) + d(t, c)\\
-d(a, c) - d(a, t) &\le d(t, c)\\
+d(a, c) &\le  d(t, a) + d(t, c)\\
+d(a, c) - d(t, a) &\le d(t, c)\\
 & \therefore \\
 |d(t, a) - d(a, c)| &\le d(t,c)\\
 \end{align}
-$$
+```
 
 for a visual representation where $t$ is the target, $b$ is the best match so far, $a$ is the "active" candidate, and $c$ is another candidate being considered:
+
 ![lower](lb.png)
 
+
+Once we have our lower bounds, we go through the lower bounds in ascending order and compute the actual distance. Once the lower bounds of data exceeds lowest distance so far, that means there's no way the subsequent data is better than what we've seen. This step should happen in a constant number of comparisons.  
+
 ## Targets for improvement
-We can formulate parallelism techniques below. During the preprocessing step we compute the inter-candidate distances, which can be parallized. Additionally, when computing the lower bounds between a target and a candidate, we can also parallelize this step. Both of these help us to "erase" an inner-loop in both the preprocessing and the search steps.
+We can formulate parallelism techniques below. During the preprocessing step we compute the inter-candidate distances, which can be parallized. Additionally, when computing the lower bounds between a target and a candidate, we can also parallelize this step since it's just a nested loop. Both of these help us to "erase" an inner-loop in both the preprocessing and the search steps.
 
 
 
 ## Deliverables
-A sequential and parallel LAESA with benchmarks using one of the [Approximate Nearest Neighbors datasets](http://corpus-texmex.irisa.fr/) or somehting similar. We can benchmark the algorithim by selecting subsets of the dataset. Additionally, I'd like to benchmark subsequent searches (exclusive of preprocessing).
+A sequential and parallel LAESA with benchmarks w.r.t. time using one of the [Approximate Nearest Neighbors datasets](http://corpus-texmex.irisa.fr/) or somehting similar. We can benchmark the algorithim by selecting subsets of the dataset. Additionally, I'd like to benchmark subsequent searches (exclusive of preprocessing). Finally, I also want see how many distance calls are actually called during a search and if that changes with dataset size. 
 
 
 ## Python reference
@@ -78,25 +82,23 @@ class Laesa[T]:
         self.num_bases = num_bases
 
         # Used for LAESA aglorithim, we compute the distance between every point to the
-        # base candidates so we can narrow our search with the traingle inequality
+        # base candidates so we can find lower bounds with the triangle inequality
         self.base_indices = [random.choice(range(self.num_candidates))]  # arbitrary
         self.base_dist = [[0 for _ in range(self.num_candidates)] for _ in range(num_bases)]
         lower_bounds = [0 for _ in range(self.num_candidates)]
 
-        for i in range(num_bases):
+        for i in range(num_bases):  # sequential step, unfortunately not parallelizable
             current_base = candidates[self.base_candidates[i]]
             max_dist_index = 0
 
-            for j in range(self.num_candidates):  # TODO this step is parallelizable
+            for j in range(self.num_candidates):  # TODO parallelize
                 self.base_dist[i][j] = self.dist(current_base, candidates[j])
                 if j in self.base_candidates:
                     continue
 
                 lower_bounds[j] += self.inter_dist[i][j]
                 # We want the next base to be as far from the others as possible
-                # ensures we have a diversity of bases
-                if lower_bounds[j] > lower_bounds[max_dist_index]:
-                    max_dist_index = j
+                max_dist_index = max(j, max_dist_index, key=lambda i: lower_bounds[i])
 
             self.base_indices.append(max_dist_index)
         self.base_indices.pop()  # Removes last base as we don't compute distances
@@ -108,16 +110,15 @@ class Laesa[T]:
         def compute_lb(j: int) -> float:
             """Computes highest lb using the triangle inequality and the bases."""
             return max(abs(target_dist[i] - self.inter_dist[i][j]) for i in range(self.num_bases))
-        lower_bounds = [compute_lb(j) for j in range(self.num_candidates)]
+        lower_bounds = [compute_lb(j) for j in range(self.num_candidates)]  # TODO parellize
 
         base_index = min(range(self.num_base), key=lambda i: target_dist[i])
         best_dist = target_dist[base_index]
         best_candidate = self.base_indices[base_index]
 
-        # We assume our lowerbounds total ordering is approximately correct
         # The heap ensures that all further lower bounds are greater than the best dist
         # Heapify is O(n) and this value should converge in O(1) steps
-        lb_heap = Heap(range(self.num_candidates), key=lambda i: lower_bounds[i])
+        lb_heap = Heap(range(self.num_candidates), key=lambda i: lower_bounds[i])  # My custom heap API, just heapq with a key
         while lb_heap and lower_bounds[lb_heap.peak()] <= best_dist:
             cand_index = lb_heap.pop()
             if (new_dist := self.dist(self.candiates[cand_index], target)) < best_dist:
