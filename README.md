@@ -1,22 +1,23 @@
 # hello-neighbor
 
-
 ## Problem
-The Nearest Neighbors Search (NNS) algorithim is one of the most natural "ML" algorithims. The search will identify a training data point that is the closest to the desired point. Nearest Neighbor algorithims rely on the underlying assumption that the nearest datapoint within the training set is provides useful information. Nearest Neighbor search has been applied to problems such as data mining, reccomendation systems, pattern recognition, data compression, and databases [[1]](#1) [[2]](#2) [[3]](#3) [[6]](#6) [[7]](#7).
+The Nearest Neighbors Search (NNS) algorithm is one of the most natural ML algorithms. The search identifies a training data point that is closest to the desired point. Nearest Neighbor algorithms rely on the underlying assumption that the nearest datapoint within the training set provides useful information. NNS has been applied to problems such as data mining, recommendation systems, pattern recognition, data compression, and databases [[1]](#1) [[2]](#2) [[3]](#3) [[6]](#6) [[7]](#7).
 
-More formally, we can define this problem for a metric space $(M, d)$, which consists of a set of points $y \in M$ and a distance metric $d: M\times M \rightarrow \mathbb{R}^+$. The distance metric must uphold the triangle inequality $d(x, z) \le d(x, y) + d(y, z)$, symmetry $d(x, y) = d(y, x)$, and satisfies $d(x,y) = 0 \Leftrightarrow x=y$. With this, the nearest neighbor is defined:
+More formally, we can define this problem for a metric space $(M, d)$, which consists of a set of points $y \in M$ and a distance metric $d: M\times M \rightarrow \mathbb{R}^+$. The distance metric must uphold the triangle inequality $d(x, z) \le d(x, y) + d(y, z)$ and symmetry $d(x, y) = d(y, x)$, and it must satisfy $d(x,y) = 0 \Leftrightarrow x=y$. With this, the nearest neighbor is defined as:
+
 ```math
 NN(x) = \min_{y \in M} d(x, y)
 ```
 
-A very concrete example is given a set $S$ of $n$ vectors $S \in \mathbb{R}^d$, we want to find the nearest vector to $\vec{x}$ using the euclidean distance. A naive way to do this will take $O(nd)$ by computing the euclidean distance for every vector in $S$.
+A very concrete example is given a set $S$ of $n$ vectors $S \in \mathbb{R}^d$, we want to find the nearest vector to $\vec{x}$ using the Euclidean distance. A naive way to do this would be to compute the Euclidean distance for every vector in $S$. This takes $O(nd)$ time.
 
 ## Problem Formulation
-This can pose a problem when considering a very expensive computationally expensive distance metric $d$ dominates other steps, such as the euclidean distance for a huge vector. Additionally, data structures such as $k\text{-}d$ trees break down if the "points" exist in an exotic space that cannot be easily turned into a vector. An example of this is a set of vertices in a graph and the shortest-path.
+This runtime can pose a problem when considering a very computationally expensive distance metric $d$ that dominates other steps, such as the Euclidean distance for a huge vector. Additionally, data structures such as $k\text{-}d$ trees break down if the "points" exist in an exotic space that cannot be easily turned into a vector. An example of this is a set of vertices in a graph and the shortest-path.
 
-The linear approximating and eliminating search algorithm (LAESA) algorithim [[5]](#5) achieves $O(1)$ distance computations and $O(n + d\ \text{log}(n))$ time complexity ($d$  is the time to calculate the distance and doesn't grow with n). Another benefit is only requiring loading $O(1)$ data into memory outside of preprocessing, as we only need to load the data point for the distance computation. However, a drawback is the linear preprocessing cost $O(n)$ distance computations.
+The linear approximating and eliminating search algorithm (LAESA) algorithm [[5]](#5) achieves $O(1)$ distance computations and $O(n + d\ \text{log}(n))$ time complexity ($d$  is the time to calculate the distance and doesn't grow with $n$). Another benefit is that it only requires loading $O(1)$ data into memory outside of preprocessing, as we only need to load the data point for the distance computation. However, a drawback is the linear preprocessing cost, which is $O(n)$ distance computations.
 
-The way we accomplish is by eliminitating candidates by finding a lower bound for their distance without explicitly computing the distance to a point $t$, instead using preprocessed distances[[4]](#4). We do this by using  properties of the triangle inequality.  Given a target $t$, candidate $c$, and an active candidate $a$ whose distance to $t$ we know, the lower bound $d(t, c)$ is:
+The way we accomplish NNS is by eliminitating candidates by finding a lower bound for their distance without explicitly computing the distance to a point $t$, instead using preprocessed distances[[4]](#4). We do this by using  properties of the triangle inequality. Given a target $t$, candidate $c$, and an active candidate $a$ whose distance to $t$ we know, the lower bound $d(t, c)$ is:
+
 ```math
 \begin{align}
 d(t, a) &\le d(t, c) + d(a, c) \\
@@ -33,23 +34,24 @@ d(a, c) - d(t, a) &\le d(t, c)\\
 \end{align}
 ```
 
-for a visual representation where $t$ is the target, $b$ is the best match so far, $a$ is the "active" candidate, and $c$ is another candidate being considered:
+For a visual representation where $t$ is the target, $b$ is the best match so far, $a$ is the "active" candidate, and $c$ is another candidate being considered:
 
 ![lower](lb.png)
 
+Once we have our lower bounds, we go through the lower bounds in ascending order and compute the actual distance. Once the lower bounds of data exceeds the lowest distance so far, that means there's no way the subsequent data is better than what we've seen. This step should happen in a constant number of comparisons.  
 
-Once we have our lower bounds, we go through the lower bounds in ascending order and compute the actual distance. Once the lower bounds of data exceeds lowest distance so far, that means there's no way the subsequent data is better than what we've seen. This step should happen in a constant number of comparisons.  
+## Targets for Improvement
+There are multiple steps that can be parallelized.
 
-## Targets for improvement
-We can formulate parallelism techniques below. During the preprocessing step we compute the inter-candidate distances, which can be parallized. Additionally, when computing the lower bounds between a target and a candidate, we can also parallelize this step since it's just a nested loop. Both of these help us to "erase" an inner-loop in both the preprocessing and the search steps.
+1. Computing the inter-candidate distances during preprocessing
+2. Computing the lower bounds between a target and a candidate during searching
 
-
+These help "erase" an inner-loop in both the preprocessing and search steps.
 
 ## Deliverables
-A sequential and parallel LAESA with benchmarks w.r.t. time using one of the [Approximate Nearest Neighbors datasets](http://corpus-texmex.irisa.fr/) or somehting similar. We can benchmark the algorithim by selecting subsets of the dataset. Additionally, I'd like to benchmark subsequent searches (exclusive of preprocessing). Finally, I also want see how many distance calls are actually called during a search and if that changes with dataset size. 
+A sequential and parallel LAESA with benchmarks w.r.t. time using one of the [Approximate Nearest Neighbors datasets](http://corpus-texmex.irisa.fr/) or something similar. We can benchmark the algorithm by selecting subsets of the dataset. Additionally, we'd like to benchmark subsequent searches (exclusive of preprocessing). Finally, we also want see how many distance calls are actually called during a search and if that changes with the dataset size. 
 
-
-## Python reference
+## Python Reference
 ```python
 class Laesa[T]:
     """Computes approximate Nearest Neighbor with linear preprocessing.
@@ -127,8 +129,8 @@ class Laesa[T]:
         return self.candidates[best_candidate]
 ```
 
-## Further discussion
-A $k$-NN algorithim would be a not-to-difficult modification to the project, as instead of tracking the best candidates, we would also track the top $k$ candidates with another heap. Further, we could compare against AESA, which has a quadratic preprocessing cost.
+## Further Discussion
+A $k$-NN algorithm would be a not-too-difficult modification to the project, as instead of tracking the best candidates, we would also track the top $k$ candidates with another heap. Further, we could compare it against AESA, which has a quadratic preprocessing cost.
 
 ## References
 
