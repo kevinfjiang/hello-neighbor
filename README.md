@@ -38,9 +38,9 @@ d(a, c) - d(t, a) &\le d(t, c)\\
 
 For a visual representation where $t$ is the target, $b$ is the best match so far, $a$ is the "active" candidate, and $c$ is another candidate being considered:
 
-![lower](lb.png)
+<p align="center"><img src='lb.png' width='500'></p>
 
-Once we have our lower bounds, we go through the lower bounds in ascending order and compute the actual distance. Once the lower bounds of data exceeds the lowest distance so far, that means there's no way the subsequent data is better than what we've seen. This step should happen in a constant number of comparisons.  
+Once we have our lower bounds, we go through the lower bounds in ascending order and compute the actual distance. Once the lower bounds of data exceeds the lowest distance so far, that means there's no way the subsequent data is better than what we've seen. This step should happen in a constant number of comparisons.
 
 ## Targets for Improvement
 There are multiple steps that can be parallelized.
@@ -51,7 +51,7 @@ There are multiple steps that can be parallelized.
 These help "erase" an inner-loop in both the preprocessing and search steps.
 
 ## Deliverables
-A sequential and parallel LAESA with benchmarks w.r.t. time using one of the [Approximate Nearest Neighbors datasets](http://corpus-texmex.irisa.fr/) or something similar. We can benchmark the algorithm by selecting subsets of the dataset. Additionally, we'd like to benchmark subsequent searches (exclusive of preprocessing). Finally, we also want see how many distance calls are actually called during a search and if that changes with the dataset size. 
+A sequential and parallel LAESA with benchmarks w.r.t. time using one of the [Approximate Nearest Neighbors datasets](http://corpus-texmex.irisa.fr/) or something similar. We can benchmark the algorithm by selecting subsets of the dataset. Additionally, we'd like to benchmark subsequent searches (exclusive of preprocessing). Finally, we also want see how many distance calls are actually called during a search and if that changes with the dataset size.
 
 ## Python Reference
 ```python
@@ -61,11 +61,11 @@ class Laesa[T]:
     References
     ----------
     .. [1] M. L. Mico, J. Oncina, and E. Vidal,
-    “A new version of the nearest-neighbour approximating and eliminating search algorithm (AESA) with linear preprocessing time and memory requirements,”
-    Pattern Recognition Letters, vol. 15, no. 1, pp. 9-17, Jan. 1994, doi: 10.1016/0167-8655(94)90095-7.
+        “A new version of the nearest-neighbour approximating and eliminating search algorithm (AESA) with linear preprocessing time and memory requirements,”
+        Pattern Recognition Letters, vol. 15, no. 1, pp. 9-17, Jan. 1994, doi: 10.1016/0167-8655(94)90095-7.
     .. [2] F. Moreno-Seco, L. Mico, and J. Oncina,
-    “A modification of the LAESA algorithm for approximated k-NN classification,”
-    Pattern Recognition Letters, vol. 24, no. 1, pp. 47-53, Jan. 2003, doi: 10.1016/S0167-8655(02)00187-3.
+        “A modification of the LAESA algorithm for approximated k-NN classification,”
+        Pattern Recognition Letters, vol. 24, no. 1, pp. 47-53, Jan. 2003, doi: 10.1016/S0167-8655(02)00187-3.
 
     Parameters
     ----------
@@ -79,56 +79,65 @@ class Laesa[T]:
         `num_bases` of bases is done by maximizing the distances between, by default 25
     """
 
-    def __init__(self, candidates: list[T], distance: Callable[[T, T], float], num_bases: int=25):
+    def __init__(
+        self, candidates: list[T], distance: Callable[[T, T], float], num_bases: int=25
+    ):
         self.dist = distance
         self.candidates = candidates
         self.num_candidates = len(candidates)
         self.num_bases = num_bases
 
         # Used for LAESA aglorithim, we compute the distance between every point to the
-        # base candidates so we can find lower bounds with the triangle inequality
+        # base candidates so we can narrow our search with the traingle inequality
         self.base_indices = [random.choice(range(self.num_candidates))]  # arbitrary
-        self.base_dist = [[0 for _ in range(self.num_candidates)] for _ in range(num_bases)]
+        self.base_dist = [
+            [0 for _ in range(self.num_candidates)] for _ in range(num_bases)
+        ]
         lower_bounds = [0 for _ in range(self.num_candidates)]
 
-        for i in range(num_bases):  # sequential step, unfortunately not parallelizable
-            current_base = candidates[self.base_candidates[i]]
+        for i in range(num_bases):
+            current_base = candidates[self.base_indices[i]]
             max_dist_index = 0
 
-            for j in range(self.num_candidates):  # TODO parallelize
-                self.base_dist[i][j] = self.dist(current_base, candidates[j])
-                if j in self.base_candidates:
+            for j in range(self.num_candidates):  # TODO this step is parallelizable
+                if j in self.base_indices or self.base_indices[i] == j:  # d(x, x) = 0
                     continue
 
-                lower_bounds[j] += self.inter_dist[i][j]
+                self.base_dist[i][j] = self.dist(current_base, candidates[j])
+                lower_bounds[j] += self.base_dist[i][j]
                 # We want the next base to be as far from the others as possible
-                max_dist_index = max(j, max_dist_index, key=lambda i: lower_bounds[i])
+                max_dist_index = max(j, max_dist_index, key=lambda k: lower_bounds[k])
 
             self.base_indices.append(max_dist_index)
         self.base_indices.pop()  # Removes last base as we don't compute distances
 
     def predict(self, target: T) -> T:
-        target_dist = [self.dist(target, self.candidates[p]) for p in self.base_protos]  # TODO parellize
+        # TODO parellize
+        target_dist = [self.dist(target, self.candidates[p]) for p in self.base_indices]
 
         # Computes initial guess lower bounds  TODO this step is parallelizable
         def compute_lb(j: int) -> float:
             """Computes highest lb using the triangle inequality and the bases."""
-            return max(abs(target_dist[i] - self.inter_dist[i][j]) for i in range(self.num_bases))
-        lower_bounds = [compute_lb(j) for j in range(self.num_candidates)]  # TODO parellize
+            return max(
+                abs(target_dist[i] - self.base_dist[i][j]) for i in range(self.num_bases)
+            )
+        lower_bounds = [compute_lb(j) for j in range(self.num_candidates)]
 
-        base_index = min(range(self.num_base), key=lambda i: target_dist[i])
+        base_index = min(range(self.num_bases), key=lambda i: target_dist[i])
         best_dist = target_dist[base_index]
         best_candidate = self.base_indices[base_index]
 
+        # We assume our lowerbounds total ordering is approximately correct
         # The heap ensures that all further lower bounds are greater than the best dist
         # Heapify is O(n) and this value should converge in O(1) steps
-        lb_heap = Heap(range(self.num_candidates), key=lambda i: lower_bounds[i])  # My custom heap API, just heapq with a key
+        lb_heap = Heap(range(self.num_candidates), key=lambda i: lower_bounds[i])
         while lb_heap and lower_bounds[lb_heap.peak()] <= best_dist:
             cand_index = lb_heap.pop()
-            if (new_dist := self.dist(self.candiates[cand_index], target)) < best_dist:
+            if (new_dist := self.dist(self.candidates[cand_index], target)) < best_dist:
                 best_dist, best_candidate = new_dist, cand_index
 
         return self.candidates[best_candidate]
+
 ```
 
 ## Further Discussion

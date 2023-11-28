@@ -27,11 +27,11 @@ class Laesa[T]:
     References
     ----------
     .. [1] M. L. Mico, J. Oncina, and E. Vidal,
-    “A new version of the nearest-neighbour approximating and eliminating search algorithm (AESA) with linear preprocessing time and memory requirements,”
-    Pattern Recognition Letters, vol. 15, no. 1, pp. 9-17, Jan. 1994, doi: 10.1016/0167-8655(94)90095-7.
+        “A new version of the nearest-neighbour approximating and eliminating search algorithm (AESA) with linear preprocessing time and memory requirements,”
+        Pattern Recognition Letters, vol. 15, no. 1, pp. 9-17, Jan. 1994, doi: 10.1016/0167-8655(94)90095-7.
     .. [2] F. Moreno-Seco, L. Mico, and J. Oncina,
-    “A modification of the LAESA algorithm for approximated k-NN classification,”
-    Pattern Recognition Letters, vol. 24, no. 1, pp. 47-53, Jan. 2003, doi: 10.1016/S0167-8655(02)00187-3.
+        “A modification of the LAESA algorithm for approximated k-NN classification,”
+        Pattern Recognition Letters, vol. 24, no. 1, pp. 47-53, Jan. 2003, doi: 10.1016/S0167-8655(02)00187-3.
 
     Parameters
     ----------
@@ -63,14 +63,13 @@ class Laesa[T]:
 
             for j in range(self.num_candidates):  # TODO this step is parallelizable
                 self.base_dist[i][j] = self.dist(current_base, candidates[j])
-                if j in self.base_indices:
+                if j in self.base_indices or self.base_indices[i] == j:  # d(x, x) = 0
                     continue
 
                 lower_bounds[j] += self.base_dist[i][j]
                 # We want the next base to be as far from the others as possible
                 # ensures we have a diversity of bases
-                if lower_bounds[j] > lower_bounds[max_dist_index]:
-                    max_dist_index = j
+                max_dist_index = max(j, max_dist_index, key=lambda k: lower_bounds[k])
 
             self.base_indices.append(max_dist_index)
         self.base_indices.pop()  # Removes last base as we don't compute distances
