@@ -37,6 +37,7 @@ library
   build-depends:
       array ==0.5.4.0
     , base >=4.7 && <5
+    , heaps ==0.4
   default-language: Haskell2010
 
 executable hello-neighbor-exe
@@ -51,6 +52,7 @@ executable hello-neighbor-exe
   build-depends:
       array ==0.5.4.0
     , base >=4.7 && <5
+    , heaps ==0.4
     , hello-neighbor
   default-language: Haskell2010
 
@@ -67,5 +69,6 @@ test-suite hello-neighbor-test
   build-depends:
       array ==0.5.4.0
     , base >=4.7 && <5
+    , heaps ==0.4
     , hello-neighbor
   default-language: Haskell2010
