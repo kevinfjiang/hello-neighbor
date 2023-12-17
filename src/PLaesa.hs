@@ -1,6 +1,7 @@
 {-# LANGUAGE ScopedTypeVariables, NamedFieldPuns, RecordWildCards #-}
-module Laesa (Laesa(..), initLaesa, predict) where
+module PLaesa (pInitLaesa, pPredict, Laesa) where
 
+import Laesa (Laesa(..))
 import MetricSpace (MetricSpace(..))
 
 import Data.Ord (comparing)
@@ -8,14 +9,7 @@ import Data.List (maximumBy, minimumBy, transpose, length)
 import Data.Heap (MinPrioHeap, fromList, view)
 import Control.Parallel.Strategies (using, rdeepseq)
 
-
-data Laesa m = Laesa{
-  lMetricSpace :: MetricSpace m,
-  lNumBases :: Int,
-  lBases :: [m],
-  lBaseDists :: [[Double]]  -- numBases x numCandidates
-}
-
+strat = rdeepseq  -- constant strat to be chosen and changed later
 
 keyMax :: Ord k => [k] -> [m] -> (k, m)
 keyMax key el = maximumBy (comparing fst) (zip key el)
@@ -23,8 +17,8 @@ keyMax key el = maximumBy (comparing fst) (zip key el)
 keyMin :: Ord k => [k] -> [m] -> (k, m)
 keyMin key el = minimumBy (comparing fst) (zip key el)
 
-initLaesa :: MetricSpace m -> Int -> Laesa m
-initLaesa ms@MetricSpace{mData, mDist} numBases =
+pInitLaesa :: MetricSpace m -> Int -> Laesa m
+pInitLaesa ms@MetricSpace{mData, mDist} numBases =
   Laesa{
     lMetricSpace = ms, lNumBases = numBases,
     lBases = fst <$> baseIndicesAndDists,
@@ -34,17 +28,17 @@ initLaesa ms@MetricSpace{mData, mDist} numBases =
           [ (maxDistBase, currBaseDists, lowerBounds) |
             (currBase, _, prevLowerBounds) <- rawBaseIndicesAndDists,
 
-            let currBaseDists = map (mDist currBase) mData,
-            let lowerBounds = zipWith (+) currBaseDists prevLowerBounds,
-            let maxDistBase = snd $ keyMax lowerBounds mData] -- TODO repeats
-        baseIndicesAndDists = take numBases $ map (\(e1, e2, _) -> (e1, e2)) tail rawBaseIndicesAndDists
+            let currBaseDists = map (mDist currBase) mData `using` strat,
+            let lowerBounds = zipWith (+) currBaseDists prevLowerBounds `using` strat,
+            let maxDistBase = snd $ keyMax lowerBounds mData]
+        baseIndicesAndDists = take numBases $ map (\(e1, e2, _) -> (e1, e2)) rawBaseIndicesAndDists
 
 computeLowerBounds :: [[Double]] -> [Double] -> [Double]
-computeLowerBounds baseDist targDist = map maxLB (transpose baseDist)
-  where maxLB = (maximum).(zipWith (+) targDist)
+computeLowerBounds baseDist targDist = map maxLB (transpose baseDist) `using` strat
+  where maxLB = (maximum).(\x -> zipWith (+) targDist x `using` strat)
 
-predict :: forall m. Laesa m -> m -> m
-predict Laesa{lMetricSpace=MetricSpace{..}, ..} target = bestFromBound (view minHeap) (keyMin targDist lBases)
+pPredict :: forall m. Laesa m -> m -> m
+pPredict Laesa{lMetricSpace=MetricSpace{..}, ..} target = bestFromBound (view minHeap) (keyMin targDist lBases)
   where lowerBounds = computeLowerBounds lBaseDists targDist
         targDist = [mDist target base | base <- lBases]
         minHeap = fromList $ zip lowerBounds mData
