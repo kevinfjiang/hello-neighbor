@@ -1,6 +1,6 @@
 cabal-version: 2.2
 
--- This file has been generated from package.yaml by hpack version 0.35.1.
+-- This file has been generated from package.yaml by hpack version 0.36.0.
 --
 -- see: https://github.com/sol/hpack
 
@@ -27,6 +27,8 @@ library
   exposed-modules:
       Laesa
       Lib
+      MetricSpace
+      PLaesa
   other-modules:
       Paths_hello_neighbor
   autogen-modules:
@@ -37,7 +39,8 @@ library
   build-depends:
       array ==0.5.4.0
     , base >=4.7 && <5
-    , heaps ==0.4
+    , containers ==0.7
+    , heap ==1.0.4
   default-language: Haskell2010
 
 executable hello-neighbor-exe
@@ -52,7 +55,8 @@ executable hello-neighbor-exe
   build-depends:
       array ==0.5.4.0
     , base >=4.7 && <5
-    , heaps ==0.4
+    , containers ==0.7
+    , heap ==1.0.4
     , hello-neighbor
   default-language: Haskell2010
 
@@ -69,6 +73,7 @@ test-suite hello-neighbor-test
   build-depends:
       array ==0.5.4.0
     , base >=4.7 && <5
-    , heaps ==0.4
+    , containers ==0.7
+    , heap ==1.0.4
     , hello-neighbor
   default-language: Haskell2010
