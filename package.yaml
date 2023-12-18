@@ -26,6 +26,7 @@ dependencies:
 - containers >= 0.6
 - bytestring >= 0.11
 - binary == 0.8.9.1
+- parallel == 3.2.2.0
 
 ghc-options:
 - -Wall
