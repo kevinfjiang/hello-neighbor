@@ -13,7 +13,7 @@ data Laesa m = Laesa{
   lMetricSpace :: MetricSpace m,
   lNumBases :: Int,
   lBases :: [m],
-  lBaseDists :: [[Double]]  -- numBases x numCandidates
+  lBaseDists :: [[Float]]  -- numBases x numCandidates
 }
 
 keyMax :: Ord k => [(k, m)] -> (k, m)
@@ -34,7 +34,7 @@ initLaesa ms@MetricSpace{mData} numBases =
         basesFromSpace = initLaesaHelper ms (head mData) initLowerBounds (singleton 0)
         takeBases = take numBases basesFromSpace
 
-initLaesaHelper :: MetricSpace m -> m -> [Double] -> IntSet -> [(m, [Double])]
+initLaesaHelper :: MetricSpace m -> m -> [Float] -> IntSet -> [(m, [Float])]
 initLaesaHelper ms@MetricSpace{..} currBase lowerBounds visited = (currBase, currBaseDists) :
   initLaesaHelper ms newBase newLowerBound (insert maxIndex visited)
 
@@ -44,7 +44,7 @@ initLaesaHelper ms@MetricSpace{..} currBase lowerBounds visited = (currBase, cur
           zip newLowerBound $ zip [0..] mData
 
 
-computeLowerBounds :: [[Double]] -> [Double] -> [Double]  -- TODO add documentation
+computeLowerBounds :: [[Float]] -> [Float] -> [Float]  -- TODO add documentation
 computeLowerBounds baseDist targDist = map maxLB (transpose baseDist)
   where maxLB = (maximum).(zipWith (+) targDist)
 
@@ -55,7 +55,7 @@ predict Laesa{lMetricSpace=MetricSpace{..}, ..} target =
         targDist = [mDist target base | base <- lBases]
         minHeap = fromList $ zip lowerBounds mData
 
-        bestFromBound :: Maybe ((Double, m), MinPrioHeap Double m) -> (Double, m) -> m
+        bestFromBound :: Maybe ((Float, m), MinPrioHeap Float m) -> (Float, m) -> m
         bestFromBound Nothing (_, bestCand) = bestCand
         bestFromBound (Just ((currLb, curr), remain)) (bestDist, best)
           | currLb > bestDist = best

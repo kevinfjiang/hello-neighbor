@@ -11,15 +11,15 @@ import Data.ByteString as BS
 -- Gets a singular vector given dimension size
 getFVec :: Int -> Get [Float]
 getFVec d = do
-  d <- replicateM d getFloatle
+  vec <- replicateM d getFloatle
   _ <- getInt32le  -- terminating character
-  return d
+  return vec
 
 getIVec :: Int -> Get [Int32]
 getIVec d = do
-  d <- replicateM d (getInt32le)
+  vec <- replicateM d (getInt32le)
   _ <- getInt32le  -- terminating character
-  return d
+  return vec
 
 -- Lazily reads the vectors from an .fvecs/.ivecs file
 readVecs :: (Int -> Get m) -> FilePath -> IO [m]
@@ -52,7 +52,7 @@ dropHeadChunk lbs = case BL.uncons lbs of
   _ -> BL.empty
 
 
-apiuse :: IO()  -- TODO delete
+apiuse :: IO()
 apiuse = do
   v <- readVecs getIVec "data/siftsmall_groundtruth.ivecs"
   print $ ( Prelude.head v)
