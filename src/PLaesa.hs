@@ -1,20 +1,18 @@
 {-# LANGUAGE ScopedTypeVariables, NamedFieldPuns, RecordWildCards #-}
-module Laesa (Laesa(..), initLaesa, predict) where
+module PLaesa (pInitLaesa, pPredict) where
 
+import Laesa (Laesa(..))
 import MetricSpace (MetricSpace(..))
 
-import Data.Ord (comparing)
 import Data.List (maximumBy, minimumBy, transpose)
+import Data.Ord (comparing)
 
+import Control.Parallel.Strategies (Strategy, NFData, using, rdeepseq, parBuffer)
 import Data.Heap (MinPrioHeap, fromList, view)
 import Data.IntSet (IntSet, insert, notMember, singleton)
 
-data Laesa m = Laesa{
-  lMetricSpace :: MetricSpace m,
-  lNumBases :: Int,
-  lBases :: [m],
-  lBaseDists :: [[Float]]  -- numBases x numCandidates
-}
+strat :: NFData m => Strategy [m]  -- TODO this type definition can change works for now
+strat = parBuffer 100 rdeepseq  -- constant strat to be chosen and changed later
 
 keyMax :: Ord k => [(k, m)] -> (k, m)
 keyMax = maximumBy (comparing fst)
@@ -22,8 +20,9 @@ keyMax = maximumBy (comparing fst)
 keyMin :: Ord k => [(k, m)] -> (k, m)
 keyMin = minimumBy (comparing fst)
 
-initLaesa :: MetricSpace m -> Int -> Laesa m
-initLaesa ms@MetricSpace{mData} numBases = Laesa{
+
+pInitLaesa :: MetricSpace m -> Int -> Laesa m
+pInitLaesa ms@MetricSpace{mData} numBases = Laesa{
   lMetricSpace = ms,
   lNumBases = numBases,
   lBases = fst <$> takeBases,
@@ -36,18 +35,17 @@ initLaesaHelper :: MetricSpace m -> m -> [Float] -> IntSet -> [(m, [Float])]
 initLaesaHelper ms@MetricSpace{..} currBase lowerBounds visited = (currBase, currBaseDists) :
   initLaesaHelper ms newBase newLowerBound (insert maxIndex visited)
 
-  where currBaseDists = map (mDist currBase) mData
-        newLowerBound = zipWith (+) lowerBounds currBaseDists
+  where currBaseDists = map (mDist currBase) mData `using` strat
+        newLowerBound = zipWith (+) lowerBounds currBaseDists `using` strat
         (maxIndex, newBase) = snd $ keyMax $ filter (\(_, (index, _)) -> notMember index visited) $
           zip newLowerBound $ zip [0..] mData
 
+computeLowerBounds :: [[Float]] -> [Float] -> [Float]
+computeLowerBounds baseDist targDist = map maxLB (transpose baseDist) `using` strat
+  where maxLB = (maximum).(\x -> zipWith (+) targDist x `using` strat)
 
-computeLowerBounds :: [[Float]] -> [Float] -> [Float]  -- TODO add documentation
-computeLowerBounds baseDist targDist = map maxLB (transpose baseDist)
-  where maxLB = (maximum).(zipWith (+) targDist)
-
-predict :: forall m. Laesa m -> m -> m
-predict Laesa{lMetricSpace=MetricSpace{..}, ..} target =
+pPredict :: forall m. Laesa m -> m -> m
+pPredict Laesa{lMetricSpace=MetricSpace{..}, ..} target =
   bestFromBound (view minHeap) (keyMin $ zip targDist lBases)
   where lowerBounds = computeLowerBounds lBaseDists targDist
         targDist = [mDist target base | base <- lBases]

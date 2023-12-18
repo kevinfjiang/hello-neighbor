@@ -1,8 +1,12 @@
-module Lib (buildPair) where
+module Lib(
+    module DataLoader,
+    module Laesa,
+    module MetricSpace,
+    module PLaesa,
+) where
 
-import Data.Array(Array, listArray, (!), (//))
+import DataLoader
+import Laesa
+import MetricSpace
+import PLaesa
 
-buildPair :: (Int, Int)
-buildPair = let arr  = listArray (1,10) (repeat 37) :: Array Int Int
-                arr' = arr // [(1, 64)]
-            in (arr ! 1, arr' ! 1)
