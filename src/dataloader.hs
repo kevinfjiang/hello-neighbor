@@ -52,8 +52,8 @@ dropHeadChunk lbs = case BL.uncons lbs of
   _ -> BL.empty
 
 
-apiuse :: IO()
-apiuse = do
-  v <- readVecs getIVec "data/siftsmall_groundtruth.ivecs"
-  print $ ( Prelude.head v)
-  return ()
+-- apiuse :: IO()
+-- apiuse = do
+--   v <- readVecs getIVec "data/siftsmall_groundtruth.ivecs"
+--   print $ ( Prelude.head v)
+--   return ()

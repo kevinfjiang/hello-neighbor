@@ -7,7 +7,7 @@ import Data.Ord (comparing)
 import Data.List (maximumBy, minimumBy, transpose)
 
 import Data.Heap (MinPrioHeap, fromList, view)
-import Data.IntSet (IntSet, insert, member, singleton)
+import Data.IntSet (IntSet, insert, notMember, singleton)
 
 data Laesa m = Laesa{
   lMetricSpace :: MetricSpace m,
@@ -23,13 +23,11 @@ keyMin :: Ord k => [(k, m)] -> (k, m)
 keyMin = minimumBy (comparing fst)
 
 initLaesa :: MetricSpace m -> Int -> Laesa m
-initLaesa ms@MetricSpace{mData} numBases =
-  Laesa{
-    lMetricSpace = ms,
-    lNumBases = numBases,
-    lBases = fst <$> takeBases,
-    lBaseDists = snd <$> takeBases
-  }
+initLaesa ms@MetricSpace{mData} numBases = Laesa{
+  lMetricSpace = ms,
+  lNumBases = numBases,
+  lBases = fst <$> takeBases,
+  lBaseDists = snd <$> takeBases}
   where initLowerBounds = replicate (length mData) 0
         basesFromSpace = initLaesaHelper ms (head mData) initLowerBounds (singleton 0)
         takeBases = take numBases basesFromSpace
@@ -40,7 +38,7 @@ initLaesaHelper ms@MetricSpace{..} currBase lowerBounds visited = (currBase, cur
 
   where currBaseDists = map (mDist currBase) mData
         newLowerBound = zipWith (+) lowerBounds currBaseDists
-        (maxIndex, newBase) = snd $ keyMax $ filter (\(_, (index, _)) -> member index visited) $
+        (maxIndex, newBase) = snd $ keyMax $ filter (\(_, (index, _)) -> notMember index visited) $
           zip newLowerBound $ zip [0..] mData
 
 
