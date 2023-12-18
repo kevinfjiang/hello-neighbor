@@ -56,6 +56,7 @@ class Laesa[T]:
         self.base_indices = [random.choice(range(self.num_candidates))]  # arbitrary
         self.base_dist = [[0 for _ in range(self.num_candidates)] for _ in range(num_bases)]
         lower_bounds = [0 for _ in range(self.num_candidates)]
+        indices_visited = set(self.base_indices)
 
         for i in range(num_bases):
             current_base = candidates[self.base_indices[i]]
@@ -63,7 +64,7 @@ class Laesa[T]:
 
             for j in range(self.num_candidates):  # TODO this step is parallelizable
                 self.base_dist[i][j] = self.dist(current_base, candidates[j])
-                if j in self.base_indices or self.base_indices[i] == j:  # d(x, x) = 0
+                if j in indices_visited or self.base_indices[i] == j:  # d(x, x) = 0
                     continue
 
                 lower_bounds[j] += self.base_dist[i][j]
@@ -72,6 +73,7 @@ class Laesa[T]:
                 max_dist_index = max(j, max_dist_index, key=lambda k: lower_bounds[k])
 
             self.base_indices.append(max_dist_index)
+            indices_visited.add(max_dist_index)
         self.base_indices.pop()  # Removes last base as we don't compute distances
 
     def predict(self, target: T) -> T:
@@ -91,12 +93,12 @@ class Laesa[T]:
         # The heap ensures that all further lower bounds are greater than the best dist
         # Heapify is O(n) and this value should converge in O(1) steps
         lb_heap = Heap(range(self.num_candidates), key=lambda i: lower_bounds[i])
-        while lb_heap and lower_bounds[lb_heap.peak()] <= best_dist:
+        while lb_heap and lower_bounds[lb_heap.peak()] < best_dist:
             cand_index = lb_heap.pop()
             if (new_dist := self.dist(self.candidates[cand_index], target)) < best_dist:
                 best_dist, best_candidate = new_dist, cand_index
-
-        return self.candidates[best_candidate]
+        print(self.num_candidates - len(lb_heap))
+        return best_candidate
 
 
 class Aesa[T]:
@@ -147,22 +149,46 @@ class Aesa[T]:
 
             alive = new_alive
 
-        return self.candidates[best_candidate]
+        return best_candidate
 
 import numpy as np
-import tqdm
 
 def dist(a, b):
     return np.sqrt(np.sum(np.square(a - b)))
 
+def fvecs_read(filename, c_contiguous=True, dtype=np.float32):
+    fv = np.fromfile(filename, dtype=dtype)
+    if fv.size == 0:
+        return np.zeros((0, 0))
+    dim = fv.view(np.int32)[0]
+    assert dim > 0
+    fv = fv.reshape(-1, 1 + dim)
+    if not all(fv.view(np.int32)[:, 0] == dim):
+        raise IOError("Non-uniform vector sizes in " + filename)
+    fv = fv[:, 1:]
+    if c_contiguous:
+        fv = fv.copy()
+    return fv
+
+from pathlib import Path
+from scipy.spatial.distance import euclidean
+
+folder = Path("data")
+base_path =folder / "siftsmall_base.fvecs"
+ground_path = folder / "siftsmall_groundtruth.ivecs"
+query_path = folder / "siftsmall_query.fvecs"
+laern_path = folder / "siftsmall_learn.fvecs"
+
+b = 256
+
 if __name__ == "__main__":  # TODO implement LAESA KNN
-    res = []
-    data = list(np.random.randint(0, 10, (100, 10)))
-    a = Laesa(data, dist)
-    targ = np.random.randint(0, 100, (10))
-    print(targ)
-    print(a.predict(data))
-    print(min(data, key=lambda i: dist(i, targ)))
+    data = fvecs_read(base_path)
+    n = len(data)
 
+    a = Laesa(data, euclidean, b)
+    for targ, truth in zip(fvecs_read(query_path), fvecs_read(ground_path, dtype=np.int32)):
+        pred = a.predict(targ)
+        print(pred)
+        print(truth[:15])
 
-    print(f"dist pred: {dist(targ, a.predict(targ))}, dist actual: {min(dist(i, targ) for i in data)}")
+        exit()
