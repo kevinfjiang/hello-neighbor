@@ -24,6 +24,8 @@ dependencies:
 - array == 0.5.4.0
 - heap == 1.0.4
 - containers == 0.7
+- bytestring == 0.12.0.2
+- binary == 0.8.9.1
 
 ghc-options:
 - -Wall

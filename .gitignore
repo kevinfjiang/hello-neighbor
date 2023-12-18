@@ -3,3 +3,5 @@
 __pycache__/
 venv/
 stack.yaml.lock
+.DS_store
+data/
