@@ -5,3 +5,4 @@ venv/
 stack.yaml.lock
 .DS_store
 data/
+bin/
