@@ -24,6 +24,7 @@ main = do
 
   print $ "Target vector" ++ show search
   print $ "Predicted vector: " ++ show predicted
+  print $ "Distance between: " ++ show $ (mDist ms) search predicted
 
   return ()
 

@@ -3,7 +3,7 @@ module Main (main) where
 import Lib
 import System.Environment(getEnv)
 import Text.Read(readMaybe)
-import Control.Parallel.Strategies (using, parBuffer, rparWith, rdeepseq)
+import Control.Parallel.Strategies (using, parBuffer, rdeepseq)
 
 main :: IO()
 main = do
@@ -23,7 +23,7 @@ main = do
       searches = take numQuery queries
       predicts = map (pPredict model) searches `using` parBuffer 8 rdeepseq
 
-  print $ "Average loss: " ++ show (zipWith (mDist ms) searches predicts)
+  print $ "Distance per entry: " ++ show (zipWith (mDist ms) searches predicts)
 
   return ()
 

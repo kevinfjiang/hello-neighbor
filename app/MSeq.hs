@@ -22,7 +22,7 @@ main = do
       searches = take numQuery queries
       predicts = map (predict model) searches
 
-  print $ "Average loss: " ++ show (zipWith (mDist ms) searches predicts)
+  print $ "Distance per entry: " ++ show (zipWith (mDist ms) searches predicts)
 
   return ()
 
