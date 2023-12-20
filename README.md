@@ -38,7 +38,7 @@ d(a, c) - d(t, a) &\le d(t, c)\\
 
 For a visual representation where $t$ is the target, $b$ is the best match so far, $a$ is the "active" candidate, and $c$ is another candidate being considered:
 
-<p align="center"><img src='lb.png' width='500'></p>
+<p align="center"><img src='photos/lb.png' width='500'></p>
 
 Once we have our lower bounds, we go through the lower bounds in ascending order and compute the actual distance. Once the lower bounds of data exceeds the lowest distance so far, that means there's no way the subsequent data is better than what we've seen. This step should happen in a constant number of comparisons.
 
