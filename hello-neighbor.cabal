@@ -130,4 +130,5 @@ test-suite hello-neighbor-test
     , heap ==1.0.4
     , hello-neighbor
     , parallel ==3.2.2.0
+    , hspec >= 2.7
   default-language: Haskell2010
