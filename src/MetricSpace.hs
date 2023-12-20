@@ -8,7 +8,7 @@ data MetricSpace m = MetricSpace{
 }
 
 euclideanDist :: [Float] -> [Float] -> Float
-euclideanDist as bs = sqrt $ sum $ zipWith (\a b -> (a-b)**2) as bs  -- TODO we could parallelize this function
+euclideanDist as bs = sqrt $ sum $ zipWith (\a b -> (a-b)**2) as bs
 
 euclideanSpace :: [[Float]] -> MetricSpace [Float]
 euclideanSpace candidates = MetricSpace{mData=candidates, mDist=euclideanDist}
