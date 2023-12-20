@@ -2,7 +2,7 @@ name:                hello-neighbor
 version:             0.1.0.0
 github:              "githubuser/hello-neighbor"
 license:             BSD-3-Clause
-author:              ["Kevin Jiang ", "Joshua Zhou", "Jeannie Ren"]
+author:              ["Kevin Jiang", "Joshua Zhou", "Jeannie Ren"]
 maintainer:          "kevinfjiang@yahoo.com"
 copyright:           "2023 Kevin Jiang, Joshua Zhou, Jeannie Ren"
 

@@ -9,9 +9,11 @@ version:        0.1.0.0
 description:    Please see the README on GitHub at <https://github.com/githubuser/hello-neighbor#readme>
 homepage:       https://github.com/githubuser/hello-neighbor#readme
 bug-reports:    https://github.com/githubuser/hello-neighbor/issues
-author:         Author name here
-maintainer:     example@example.com
-copyright:      2023 Author name here
+author:         Kevin Jiang,
+                Joshua Zhou,
+                Jeannie Ren
+maintainer:     kevinfjiang@yahoo.com
+copyright:      2023 Kevin Jiang, Joshua Zhou, Jeannie Ren
 license:        BSD-3-Clause
 license-file:   LICENSE
 build-type:     Simple

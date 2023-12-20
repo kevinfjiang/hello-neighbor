@@ -38,7 +38,7 @@ initLaesaHelper ms@MetricSpace{..} currBase lowerBounds visited = (currBase, cur
           zip newLowerBound $ zip [0..] mData
 
 computeLowerBounds :: [[Float]] -> [Float] -> [Float]
-computeLowerBounds baseDist targDist = map maxLB baseDistT `using` rparWith rdeepseq
+computeLowerBounds baseDist targDist = map maxLB baseDistT `using` parBuffer 16 rdeepseq
   where maxLB = maximum.zipWith (\a b -> abs a-b) targDist
         baseDistT = transpose baseDist
 
@@ -46,7 +46,7 @@ pPredict :: forall m. Laesa m -> m -> m
 pPredict Laesa{lMetricSpace=MetricSpace{..}, ..} target =
   bestFromBound (view minHeap) (keyMin $ zip targDist lBases)
   where lowerBounds = computeLowerBounds lBaseDists targDist
-        targDist = [mDist target base | base <- lBases] `using` parBuffer 2 rdeepseq
+        targDist = [mDist target base | base <- lBases] `using` parBuffer 16 rdeepseq
         minHeap = fromList $ zip lowerBounds mData
 
         bestFromBound :: Maybe ((Float, m), MinPrioHeap Float m) -> (Float, m) -> m
