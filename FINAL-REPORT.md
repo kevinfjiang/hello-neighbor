@@ -43,6 +43,20 @@ For a visual representation where $t$ is the target, $b$ is the best match so fa
 
 Once we have our lower bounds, we go through the lower bounds in ascending order and compute the actual distance. Once the lower bounds of data exceeds the lowest distance so far, that means there's no way the subsequent data is better than what we've seen. This step should happen in a constant number of comparisons.
 
+## How to Run
+### Download data
+Download [siftsmall.tar.gz](http://corpus-texmex.irisa.fr/) (or any of the datasets) and create a directory called data with its contents. 
+
+### Compile the Binaries
+If you want to compile the binaries and run them, 
+run `stack --copy-bins --local-bin-path bin install`, and it will create a bin folder locally
+
+### Use ThreadScope
+Here's how to use ThreadScope to look at parallel performance (with mpar).
+First, clone the [ThreadScope repo](https://github.com/haskell/ThreadScope/releases). Then,
+1. `cabal new-build --enable-profiling`
+2. `NUM_TRAIN=2000 NUM_QUERY=50 NUM_BASES=50 cabal exec -- mpar +RTS -N -l -RTS`, where -N indicates the number of cores. Feel free to adjust NUM_TRAIN, NUM_QUERY, and NUM_BASES.
+3. `threadscope mpar.eventlog`
 
 ## Experiments
 TODO:
@@ -67,18 +81,19 @@ Another interesting note is we had to strategically fine-tune our number of thre
 Another thing of note is that the threaded applications have higher variance in their performance graphs. That's because of the "non-deterministic" behavior of the scheduler.
 
 Finally, the number of query experiment demonstrates the best scaling, likely because the other parallel version relied on some form of non-parallelized linear step in that experiment's dimension, while the query number is completely parallelized.
+<p align="center"><img src='photos/training.png' width='500'></p>
+<p align="center"><img src='photos/query.png' width='500'></p>
+<p align="center"><img src='photos/basis.png' width='500'></p>
 
 ### Threadscope Analysis
-![[photos/training.png]]
-![[photos/query.png]]
-![[photos/basis.png]]
 
-
-### Runtime Analysis on Predict Calls
-TODO
 
 ## Reflection & Discussion
-TODO
+### Challenges
+We faced several challenges, including initially encountering a slower parallel LAESA runtime than sequential LAESA. We resolved this by tuning the input parallelization parameters--knowing how much parallelism is tricky (Parallel Euclidean distance). We also had issue loading a custom file format and ultimately parsed the file successfully by using [Data.Binary.Get](https://hackage.haskell.org/package/binary-0.8.9.1/docs/Data-Binary-Get.html). Lastly, we had some trouble setting up ThreadScope, but was able to resolve this by cloning the binaries directly from the ThreadScope repo (mentioned above).
+
+### Next Steps
+We can implement a parallel K-Nearest Neighbors (KNN) LAESA algorithm. We also want to tune the parameters more and include better tests for the performance of the algorithm. Lastly, we want to parallelize the distance metrics.
 
 ## References
 
