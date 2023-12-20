@@ -44,7 +44,7 @@ initLaesaHelper ms@MetricSpace{..} currBase lowerBounds visited = (currBase, cur
 
 computeLowerBounds :: [[Float]] -> [Float] -> [Float]  -- TODO add documentation
 computeLowerBounds baseDist targDist = map maxLB (transpose baseDist)
-  where maxLB = maximum.zipWith (+) targDist
+  where maxLB = maximum.zipWith (\a b -> abs a-b) targDist
 
 predict :: forall m. Laesa m -> m -> m
 predict Laesa{lMetricSpace=MetricSpace{..}, ..} target =

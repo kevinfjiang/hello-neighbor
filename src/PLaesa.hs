@@ -39,7 +39,7 @@ initLaesaHelper ms@MetricSpace{..} currBase lowerBounds visited = (currBase, cur
 
 computeLowerBounds :: [[Float]] -> [Float] -> [Float]
 computeLowerBounds baseDist targDist = map maxLB baseDistT `using` rparWith rdeepseq
-  where maxLB = maximum.zipWith (+) targDist
+  where maxLB = maximum.zipWith (\a b -> abs a-b) targDist
         baseDistT = transpose baseDist
 
 pPredict :: forall m. Laesa m -> m -> m
