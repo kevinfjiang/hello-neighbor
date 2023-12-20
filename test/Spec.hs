@@ -1,9 +1,7 @@
 module Main (main) where
 
 import Test.Hspec
-import Laesa
-import PLaesa
-import MetricSpace
+import Lib
 
 main :: IO ()
 main = hspec $ do
