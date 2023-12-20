@@ -45,10 +45,10 @@ Once we have our lower bounds, we go through the lower bounds in ascending order
 
 ## How to Run
 ### Download data
-Download [siftsmall.tar.gz](http://corpus-texmex.irisa.fr/) (or any of the datasets) and create a directory called data with its contents. 
+Download [siftsmall.tar.gz](http://corpus-texmex.irisa.fr/) (or any of the datasets) and create a directory called data with its contents.
 
 ### Compile the Binaries
-If you want to compile the binaries and run them, 
+If you want to compile the binaries and run them,
 run `stack --copy-bins --local-bin-path bin install`, and it will create a bin folder locally
 
 ### Use ThreadScope
@@ -59,7 +59,6 @@ First, clone the [ThreadScope repo](https://github.com/haskell/ThreadScope/relea
 3. `threadscope mpar.eventlog`
 
 ## Experiments
-TODO:
 We present a sequential LAESA and a parallel LAESA and compare them with respect to time using siftsmall_base from the [Approximate Nearest Neighbors datasets](http://corpus-texmex.irisa.fr/). We have benchmarked the algorithm by selecting subsets of the dataset and by subsequent searches (exclusive of preprocessing). The dataset we used consisted of 10k training, and 100 query vectors, both of which are 128 dimensional. We validated our experimental results with our reference code found in `python_ref.py` of our github.
 
 All parameters of the parallelized algorithm (such as parBuffer sizes) were tuned on an M1 macbook pro. Different machines and different tuning methods may yield better results.
@@ -70,10 +69,7 @@ Then, we compared the speed up across the number of query vectors (number of sub
 
 Finally, we compared against the number of basis vectors, direct distance computation vectors. For a metric space, these vectors are the most important for LAESA. We compared increasing and decreasing the basis count at 20 values spaced evenly in [100, 1000] for a training set of 2000. We stopped at 1000 because we didn't want $k$ basis to approach $n$ training size. $k$ training vectors were used with 2000 training vectors and 25 query vectors
 
-## Results & Analysis
-
 ### Total Runtime
-TODO: finish analysis
 On `-O2` optimization, the parallelized version of LAESA consistently outperforms the sequential implementation of LAESA. Some exceptions to this are at very low sample sizes of training vectors, because the overhead of creating new threads outweighs the computational benefit the thread would provide.
 
 Another interesting note is we had to strategically fine-tune our number of threads: spawning too many lead to significant GC times due to there being too many threads for memory, meaning we had to limit the number of spawned threads by tuning. In fact, earlier versions included a parallelized euclidean distance that was removed since it was called semi-frequently and spawned too many threads and caused too much overhead. The existing lazy implementation worked just fine surprisingly.
