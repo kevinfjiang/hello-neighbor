@@ -82,7 +82,10 @@ Finally, the number of query experiment demonstrates the best scaling, likely be
 <p align="center"><img src='photos/basis.png' width='500'></p>
 
 ### Threadscope Analysis
-
+With two cores:
+<p align="center"><img src='photos/two-core-TS-5000.png' width='500'></p>
+With four cores:
+<p align="center"><img src='photos/four-core-TS-5000.png' width='500'></p>
 
 ## Reflection & Discussion
 ### Challenges
