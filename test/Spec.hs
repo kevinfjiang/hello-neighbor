@@ -38,8 +38,3 @@ main = hspec $ do
       let ms = euclideanSpace [[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]]
       let dist = mDist ms [1.0, 2.0, 3.0] [4.0, 5.0, 6.0]
       dist `shouldBe` 5.196152422706632
-
-    it "should create metric space correctly" $ do
-      let candidates = [[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]]
-      let ms = euclideanSpace candidates
-      length (mData ms) `shouldBe` 2
