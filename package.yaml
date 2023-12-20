@@ -42,16 +42,25 @@ ghc-options:
 library:
   source-dirs: src
 
+_exe-defs: &exe-defaults
+  source-dirs: app
+  other-modules: []
+  dependencies: [hello-neighbor]
+  ghc-options: [-threaded, -rtsopts, -with-rtsopts=-N]
+
 executables:
-  hello-neighbor-exe:
-    main:                Main.hs
-    source-dirs:         app
-    ghc-options:
-    - -threaded
-    - -rtsopts
-    - -with-rtsopts=-N
-    dependencies:
-    - hello-neighbor
+  par:
+    <<: *exe-defaults
+    main: Par.hs
+  seq:
+    <<: *exe-defaults
+    main: Par.hs
+  mpar:
+    <<: *exe-defaults
+    main: MPar.hs
+  mseq:
+    <<: *exe-defaults
+    main: MSeq.hs
 
 tests:
   hello-neighbor-test:
