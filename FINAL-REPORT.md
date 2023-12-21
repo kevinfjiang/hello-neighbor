@@ -63,13 +63,20 @@ We present a sequential LAESA and a parallel LAESA and compare them with respect
 
 All parameters of the parallelized algorithm (such as parBuffer sizes) were tuned on an M1 macbook pro. Different machines and different tuning methods may yield better results.
 
-First, we compared the speed up across the number of training vectors. We looked at 20 values linearly spaced range of [100, 5000] training vectors. We started at 100 because we need a decent number of vectors to train LAESA, but stopped at 5000 because we didn't want the subsequent steps to take too long. $n$-sized training set was used with 100 basis vectors and 25 query vectors
+First, we compared how increasing the number of cores affects run-time using the runtime flags `+RTS -N${NUM_CORES}`. We found that setting `-N6` had the best performance and saw diminishing returns from there on out on an 8 core macboook pro. Higher cores indicated diminishing returns, likely from scheduling overhead. We conducted the subsequent following tests on 6 cores because we saw diminishing returns after 6 cores.
+![[photos/cores.png]]
 
-Then, we compared the speed up across the number of query vectors (number of subsequent searches). We looked at 20 groups of search vectors of sizes [1, 100]. We plot our results below. $q$ query vectors were used with 2000 training vectors and 100 basis vectors.
+Then, we compared the speed up across the number of training vectors. We looked at 20 values linearly spaced range of [100, 5000] training vectors. We started at 100 because we need a decent number of vectors to train LAESA, but stopped at 5000 because we didn't want the subsequent steps to take too long. $n$-sized training set was used with 250 basis vectors and 25 query vectors
 
-Next, we compared against the number of basis vectors, direct distance computation vectors. For a metric space, these vectors are the most important for LAESA. We compared increasing and decreasing the basis count at 20 values spaced evenly in [100, 1000] for a training set of 2000. We stopped at 1000 because we didn't want $k$ basis to approach $n$ training size. $k$ training vectors were used with 2000 training vectors and 25 query vectors
+![[photos/training.png]]
 
-Finally, we compared how increasing the number of cores affects run-time using the runtime flags `+RTS -N${NUM_CORES}`. We found that setting `-N6` had the best performance and saw diminishing returns from there on out on an 8 core macboook pro. Higher cores shown increased GC time meaning there was too much going on and too much scheduling for the CPU
+Next, we compared the speed up across the number of query vectors (number of subsequent searches). We looked at 20 groups of search vectors of sizes [1, 100]. We plot our results below. $q$ query vectors were used with 2000 training vectors and 250 basis vectors.
+
+![[photos/query.png]]
+
+Finally, we compared against the number of basis vectors, direct distance computation vectors. For a metric space, these vectors are the most important for LAESA. We compared increasing and decreasing the basis count at 20 values spaced evenly in [100, 1000] for a training set of 2000. We stopped at 1000 because we didn't want $k$ basis to approach $n$ training size. $k$ training vectors were used with 2000 training vectors and 25 query vectors
+
+![[photos/basis.png]]
 
 ### Total Runtime
 On `-O2` optimization, the parallelized version of LAESA consistently outperforms the sequential implementation of LAESA. Some exceptions to this are at very low sample sizes of training vectors, because the overhead of creating new threads outweighs the computational benefit the thread would provide.
@@ -78,16 +85,18 @@ Another interesting note is we had to strategically fine-tune our number of thre
 
 Another thing of note is that the threaded applications have higher variance in their performance graphs. That's because of the "non-deterministic" behavior of the scheduler.
 
-Finally, the number of query experiment demonstrates the best scaling, likely because the other parallel version relied on some form of non-parallelized linear step in that experiment's dimension, while the query number is completely parallelized.
-<p align="center"><img src='photos/training.png' width='500'></p>
-<p align="center"><img src='photos/query.png' width='500'></p>
-<p align="center"><img src='photos/basis.png' width='500'></p>
+Finally, the number of query experiment demonstrates the best scaling, likely because the prediction is completely in parallel. Basis performed the worst because the basis training step is a greedy algorithm and cannot be parallelized.
 
 ### Threadscope Analysis
 With two cores:
 <p align="center"><img src='photos/two-core-TS.png' width='800'></p>
 With four cores:
 <p align="center"><img src='photos/four-core-TS.png' width='800'></p>
+
+Notably, there appears to be 3 separate sections of the Threadscope graphs:
+1. Dataloading, this step is indicated without parallelism
+2. Training, this step has some parallelism but the greedy algorithm limits to what extend the training is parallel. Thus, we see some parallelism in the multiple threads with interruptions to sync up the greedy algorithm.
+3. Predictions, We predict for approximately 25 vectors completely in parallel for all the threads. This is the "extremely parallel" step noted in our presentation.
 
 ## Reflection & Discussion
 ### Challenges
